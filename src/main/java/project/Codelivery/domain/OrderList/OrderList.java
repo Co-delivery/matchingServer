@@ -3,14 +3,13 @@ package project.Codelivery.domain.OrderList;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.Codelivery.domain.BaseTimeEntity;
 import javax.persistence.*;
 
 @Getter
 @NoArgsConstructor
 @Entity
 @Table (name = "Order_list")
-public class OrderList extends BaseTimeEntity{
+public class OrderList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "list_id")
@@ -19,13 +18,12 @@ public class OrderList extends BaseTimeEntity{
     @Column
     private String item;
 
-    @Column(name = "Order_order_Id")
+    @Column(name = "order_id")
     private String orderId;
 
     @Builder
     public OrderList (String item, String orderId) {
         this.item = item;
         this.orderId = orderId;
-
     }
 }

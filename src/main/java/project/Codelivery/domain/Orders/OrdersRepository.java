@@ -5,4 +5,6 @@ import java.util.Optional;
 
 public interface OrdersRepository extends JpaRepository<Orders, String> {
     Optional<Orders> findByUserId(String userId);
+
+    Optional<Orders> deleteByUserId(String userId);
 }

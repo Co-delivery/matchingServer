@@ -10,7 +10,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table (name = "Orders")
-public class Orders extends BaseTimeEntity{
+public class Orders {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
@@ -18,15 +18,19 @@ public class Orders extends BaseTimeEntity{
 
     @Column
     private String restaurant;
+    private int menu_price;
+    private int delivery_price;
     private int price;
 
     @Column(name = "User_Id")
     private String userId;
 
     @Builder
-    public Orders(String restaurant, int price, String userId) {
+    public Orders(String restaurant, int menu_price, int delivery_price, String userId) {
         this.restaurant = restaurant;
-        this.price = price;
+        this.menu_price = menu_price;
+        this.delivery_price = delivery_price;
+        this.price = menu_price + delivery_price;
         this.userId = userId;
     }
 }
