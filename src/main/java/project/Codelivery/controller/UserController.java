@@ -20,7 +20,6 @@ import java.nio.charset.Charset;
 @RestController
 public class UserController {
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @PostMapping("/user/signup")
     public ResponseEntity<Messages> signUpRequest(@RequestBody SignUpRequestDto requestDto) {
@@ -61,17 +60,17 @@ public class UserController {
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
 
-    @PostMapping("/user/order")
-    public ResponseEntity<Messages> OrdersRequest(@RequestBody OrdersRequestDto requestDto) {
-        String user_id = requestDto.getUserId();
-        OrdersResponseDto responseDto = userService.findOrders(user_id);
-        Messages messages = Messages.builder()
-                .httpStatus(200)
-                .message("order check successful")
-                .data(responseDto)
-                .build();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-        return new ResponseEntity<>(messages, headers, HttpStatus.OK);
-    }
+    //@PostMapping("/user/order")
+    //public ResponseEntity<Messages> OrdersRequest(@RequestBody OrdersRequestDto requestDto) {
+    //    String user_id = requestDto.getUserId();
+    //    OrdersResponseDto responseDto = userService.findOrders(user_id);
+    //    Messages messages = Messages.builder()
+    //            .httpStatus(200)
+    //            .message("order check successful")
+    //            .data(responseDto)
+    //            .build();
+    //    HttpHeaders headers = new HttpHeaders();
+    //    headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+    //    return new ResponseEntity<>(messages, headers, HttpStatus.OK);
+    //}
 }

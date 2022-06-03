@@ -29,7 +29,6 @@ public class MatchController {
                 .build();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-        matchService.matchCheck(requestDto);
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
 
@@ -46,4 +45,16 @@ public class MatchController {
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
 
+    @PostMapping("/match/accept")
+    public ResponseEntity<Messages> matchAccept(@RequestBody MatchAcceptResponseDto requestDto) {
+        matchService.matchAcceptResponse(requestDto);
+        Messages messages = Messages.builder()
+                .httpStatus(200)
+                .message("match response complete")
+                .data(requestDto)
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+        return new ResponseEntity<>(messages, headers, HttpStatus.OK);
+    }
 }
