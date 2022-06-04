@@ -158,10 +158,9 @@ public class MatchService {
                 ordersRepository.deleteByUserId(userId);
                 //send message to user "time over"
                 MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
-                                                                            .title("매칭 취소")
-                                                                            .message("상대방을 찾는데 실패했어요.")
+                                                                            .event("matching cancel")
                                                                             .build();
-                fcmService.sendMessageTo(token, data);
+                fcmService.sendMessageTo(token, "매칭시간초과", "상대방을 찾을 수 없습니다.", data);
             }
 
 
@@ -188,8 +187,7 @@ public class MatchService {
                             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
                             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
                             MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
-                                    .title("매칭 완료")
-                                    .message("상대방을 확인해주세요.")
+                                    .event("find match")
                                     .matchId(matchId)
                                     .user_num(1)
                                     .other_nickname(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname())
@@ -202,8 +200,7 @@ public class MatchService {
                                     .delivery_price(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price())
                                     .build();
                             MatchAcceptRequestDto.Data data2 = MatchAcceptRequestDto.Data.builder()
-                                    .title("매칭 완료")
-                                    .message("상대방을 확인해주세요.")
+                                    .event("find match")
                                     .matchId(matchId)
                                     .user_num(2)
                                     .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
@@ -215,8 +212,8 @@ public class MatchService {
                                     .my_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                                     .delivery_price(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price())
                                     .build();
-                            fcmService.sendMessageTo(token1, data1);
-                            fcmService.sendMessageTo(token2, data2);
+                            fcmService.sendMessageTo(token1, "매칭완료", "상대방을 확인해주세요.", data1);
+                            fcmService.sendMessageTo(token2, "매칭완료", "상대방을 확인해주세요.", data2);
                         }
                         queueIdList.clear();
                 }
@@ -252,11 +249,10 @@ public class MatchService {
             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
             MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
-                    .title("매칭 실패")
-                    .message("매칭이 성사되지 않았어요.")
+                    .event("match fail")
                     .build();
-            fcmService.sendMessageTo(token1, data);
-            fcmService.sendMessageTo(token2, data);
+            fcmService.sendMessageTo(token1,"매칭 실패", "매칭이 성사되지 않았어요.", data);
+            fcmService.sendMessageTo(token2, "매칭 실패", "매칭이 성사되지 않았어요.", data);
         }
 
         List<String> successList = matchResultRepository.findSuccessMatchId();
@@ -268,8 +264,7 @@ public class MatchService {
             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
             MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
-                    .title("매칭 성공")
-                    .message("매칭이 성사되었어요.")
+                    .event("match success")
                     .other_nickname(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname())
                     .my_latitude(queue1.getLatitude())
                     .my_longitude(queue1.getLongitude())
@@ -280,8 +275,7 @@ public class MatchService {
                     .delivery_price(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price())
                     .build();
             MatchAcceptRequestDto.Data data2 = MatchAcceptRequestDto.Data.builder()
-                    .title("매칭 성공")
-                    .message("매칭이 성사되었어요.")
+                    .event("match success")
                     .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
                     .my_latitude(queue2.getLatitude())
                     .my_longitude(queue2.getLongitude())
@@ -291,8 +285,8 @@ public class MatchService {
                     .my_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                     .delivery_price(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price())
                     .build();
-            fcmService.sendMessageTo(token1, data1);
-            fcmService.sendMessageTo(token2, data2);
+            fcmService.sendMessageTo(token1, "매칭성공", "매칭이 성공하였습니다", data1);
+            fcmService.sendMessageTo(token2, "매칭성공", "매칭이 성공하였습니다", data2);
             queueRepository.delete(queue1);
             queueRepository.delete(queue2);
             ordersRepository.deleteByUserId(queue1.getUserId());
