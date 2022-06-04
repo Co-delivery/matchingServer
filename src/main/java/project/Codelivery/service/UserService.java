@@ -2,17 +2,13 @@ package project.Codelivery.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import project.Codelivery.domain.OrderList.OrderList;
 import project.Codelivery.domain.OrderList.OrderListRepository;
-import project.Codelivery.domain.Orders.Orders;
 import project.Codelivery.domain.Orders.OrdersRepository;
 import project.Codelivery.domain.User.User;
 import project.Codelivery.domain.User.UserRepository;
 import project.Codelivery.dto.User.SignUpRequestDto;
 import project.Codelivery.dto.User.UserResponseDto;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service

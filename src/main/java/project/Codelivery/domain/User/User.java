@@ -13,7 +13,6 @@ import javax.persistence.*;
 @Entity
 @Table (name = "User")
 public class User {
-
     @Id @Column(name = "Id")
     private String userId;
 
@@ -31,5 +30,4 @@ public class User {
         this.token = token;
         this.nickname = nickname;
     }
-
 }

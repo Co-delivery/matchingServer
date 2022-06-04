@@ -22,6 +22,7 @@ public class MatchResult {
     private int user2;
     private int user1_result;
     private int user2_result;
+    private int state;
 
     @Builder
     public MatchResult(int user1, int user2){
