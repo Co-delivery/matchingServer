@@ -14,17 +14,22 @@ public class MatchAcceptRequestDto {
     @AllArgsConstructor
     @Getter
     public static class Message {
-        private String to;
+        private String token;
+        private Notification notification;
         private Data data;
     }
-
+    @Builder
+    @AllArgsConstructor
+    @Getter
+    public static class Notification{
+        private String title;
+        private String body;
+    }
     @Builder
     @AllArgsConstructor
     @Getter
     public static class Data{
-        private String title;
-        private String message;
-
+        private String event;
         private int matchId;
         private int user_num;
         private String other_nickname;
