@@ -10,6 +10,7 @@ import org.apache.http.HttpHeaders;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import project.Codelivery.dto.Match.MatchAcceptRequestDto;
+
 import java.util.List;
 
 @Service
@@ -27,7 +28,7 @@ public class FCMService {
         Request request = new Request.Builder()
                 .url(API_URL)
                 .post(requestBody)
-                .addHeader(HttpHeaders.AUTHORIZATION, "Bearer" + getAccessToken())
+                .addHeader(HttpHeaders.AUTHORIZATION, "key=AAAAbTlFuvs:APA91bHJ1izIQAIj8GEVAN3zQlzsQyb92xraKnWIZHZkmC0GOiXDWxVOw1Lwa4A1wRQZdSiM92fTY_8Nho0XxarPu4SxGei_Ovsa_gKvwf5VsRflEjfS-tIyjyNm4GPsfNbtPO55vvXT")
                 .addHeader(HttpHeaders.CONTENT_TYPE, "application/json; UTF-8")
                 .build();
 
@@ -44,12 +45,13 @@ public class FCMService {
     }
 
     private String getAccessToken() throws Exception {
-        String firebaseConfigPath = "key_path";
+        String firebaseConfigPath = "fireBase/codelivery-fdee0-firebase-adminsdk-7awyi-4b1dd8cf8f.json";
 
         GoogleCredentials googleCredentials = GoogleCredentials.fromStream(new ClassPathResource(firebaseConfigPath).getInputStream())
                 .createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
 
         googleCredentials.refreshIfExpired();
+        System.out.println("token : " + googleCredentials.getAccessToken().getTokenValue());
         return googleCredentials.getAccessToken().getTokenValue();
     }
 }

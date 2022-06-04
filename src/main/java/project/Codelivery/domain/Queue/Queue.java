@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import project.Codelivery.domain.BaseTimeEntity;
 
 import javax.persistence.*;
 
@@ -13,7 +12,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table (name = "Queue")
-public class Queue extends BaseTimeEntity {
+public class Queue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,13 +23,17 @@ public class Queue extends BaseTimeEntity {
     private String restaurant;
     private int location;
     private int state;
+    private double latitude;
+    private double longitude;
 
     @Column(name = "User_Id")
     private String userId;
 
     @Builder
-    public Queue (int location, String restaurant, String userId) {
+    public Queue (int location,double latitude, double longitude, String restaurant, String userId) {
         this.location = location;
+        this.latitude = latitude;
+        this.longitude  = longitude;
         this.restaurant = restaurant;
         this.userId = userId;
     }

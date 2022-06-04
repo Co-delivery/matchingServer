@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import project.Codelivery.domain.BaseTimeEntity;
 
 import javax.persistence.*;
 
@@ -13,7 +12,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "Match_result")
-public class MatchResult extends BaseTimeEntity {
+public class MatchResult {
     @Id
     @Column(name = "match_id")
     private int matchId;

@@ -3,7 +3,7 @@ package project.Codelivery.domain.Orders;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import project.Codelivery.domain.BaseTimeEntity;
+
 import javax.persistence.*;
 
 @Getter

@@ -28,7 +28,10 @@ public class MatchAcceptRequestDto {
         private int matchId;
         private int user_num;
         private String other_nickname;
-        private String other_address;
+        private double my_latitude;
+        private double my_longitude;
+        private double other_latitude;
+        private double other_longitude;
         private int my_price;
         private int other_price;
         private int delivery_price;
