@@ -30,15 +30,15 @@ public class MatchAcceptRequestDto {
     @Getter
     public static class Data{
         private String event;
-        private int matchId;
-        private int user_num;
+        private String matchId;
+        private String user_num;
         private String other_nickname;
-        private double my_latitude;
-        private double my_longitude;
-        private double other_latitude;
-        private double other_longitude;
-        private int my_price;
-        private int other_price;
-        private int delivery_price;
+        private String my_latitude;
+        private String my_longitude;
+        private String other_latitude;
+        private String other_longitude;
+        private String my_price;
+        private String other_price;
+        private String delivery_price;
     }
 }

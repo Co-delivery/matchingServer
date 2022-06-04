@@ -31,7 +31,7 @@ public class FcmController {
 
     @PostMapping("/alarm/message")
     public ResponseEntity<Messages> messageAlarm(@RequestBody MessageAlarmDto requestDto){
-        System.out.println("***************/n/n/n/n/n/n/n/n" + requestDto.getChatMessageId() + "/n/n/n/n/n/n/n******************");
+        int chatMessageId = requestDto.getChatMessageId();
         Messages messages = Messages.builder()
                 .httpStatus(200)
                 .message("Matching registered successfully")
