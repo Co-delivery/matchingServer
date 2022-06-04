@@ -74,4 +74,8 @@ public class FCMService {
         System.out.println("token : " + googleCredentials.getAccessToken().getTokenValue());
         return googleCredentials.getAccessToken().getTokenValue();
     }
+
+    private void sendMessageAlarm(String chatMessageId){
+
+    }
 }
