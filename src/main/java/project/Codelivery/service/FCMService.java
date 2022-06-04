@@ -1,24 +1,20 @@
 package project.Codelivery.service;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import okhttp3.*;
 import org.apache.http.HttpHeaders;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import project.Codelivery.domain.ChatMessage.ChatMessage;
+import project.Codelivery.domain.ChatMessage.ChatMessageRepository;
+import project.Codelivery.domain.ChatRoomJoin.ChatRoomJoinRepository;
 import project.Codelivery.dto.Match.MatchAcceptRequestDto;
-import okhttp3.logging.HttpLoggingInterceptor;
-
-import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
+
 
 @Service
 @Slf4j
@@ -75,7 +71,4 @@ public class FCMService {
         return googleCredentials.getAccessToken().getTokenValue();
     }
 
-    private void sendMessageAlarm(String chatMessageId){
-
-    }
 }

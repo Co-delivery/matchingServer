@@ -5,6 +5,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import project.Codelivery.domain.ChatMessage.ChatMessage;
+import project.Codelivery.domain.ChatMessage.ChatMessageRepository;
+import project.Codelivery.domain.ChatRoomJoin.ChatRoomJoinRepository;
 import project.Codelivery.domain.MatchResult.MatchResult;
 import project.Codelivery.domain.MatchResult.MatchResultRepository;
 import project.Codelivery.domain.Orders.Orders;
@@ -36,12 +39,11 @@ public class MatchService {
     private final MatchResultRepository matchResultRepository;
     private final FCMService fcmService;
     private final UserRepository userRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomJoinRepository chatRoomJoinRepository;
 
     @Transactional
     public String save(MatchRequestDto requestDto) throws IllegalArgumentException{
-
-        // 위도경도 변환
-        // 출처 : https://blog.naver.com/PostView.nhn?blogId=slayra&logNo=221383891512&from=search&redirect=Log&widgetTypeCall=true&directAccess=false
         try {
             String address = requestDto.getAddress();
 
@@ -88,6 +90,8 @@ public class MatchService {
         }catch(Exception e) {
             e.printStackTrace();
         }
+        // 위도경도변환 Geocoding
+        // https://blog.naver.com/PostView.nhn?blogId=slayra&logNo=221383891512&from=search&redirect=Log&widgetTypeCall=true&directAccess=false
 
         double latitude = requestDto.getLatitude();
         double longitude = requestDto.getLongitude();
@@ -156,11 +160,10 @@ public class MatchService {
                 String token = userRepository.findByUserId(userId).getToken();
                 queueRepository.deleteByQueueId(Integer.parseInt(e));
                 ordersRepository.deleteByUserId(userId);
-                //send message to user "time over"
                 MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
                                                                             .event("matching cancel")
                                                                             .build();
-                fcmService.sendMessageTo(token, "매칭시간초과", "상대방을 찾을 수 없습니다.", data);
+                fcmService.sendMessageTo(token, "매칭시간 초과", "상대방을 찾을 수 없습니다.", data);
             }
 
 
@@ -183,7 +186,6 @@ public class MatchService {
                             queue1.setState(1);
                             Queue queue2 = queueRepository.findByQueueId(Integer.parseInt(queueId2));
                             queue2.setState(1);
-                            //send message to user1 & user2 "match accept?"
                             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
                             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
                             MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
@@ -212,8 +214,8 @@ public class MatchService {
                                     .my_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
                                     .delivery_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price()))
                                     .build();
-                            fcmService.sendMessageTo(token1, "매칭완료", "상대방을 확인해주세요.", data1);
-                            fcmService.sendMessageTo(token2, "매칭완료", "상대방을 확인해주세요.", data2);
+                            fcmService.sendMessageTo(token1, "매칭 완료", "상대방을 확인해주세요.", data1);
+                            fcmService.sendMessageTo(token2, "매칭 완료", "상대방을 확인해주세요.", data2);
                         }
                         queueIdList.clear();
                 }
@@ -227,6 +229,9 @@ public class MatchService {
         int matchId = requestDto.getMatchId();
         int user_num = requestDto.getUser_num();
         int result = requestDto.getResult();
+        if(!matchResultRepository.existsById(String.valueOf(matchId))){
+            throw new IllegalArgumentException(" : invalid matchId.");
+        }
 
         MatchResult matchResult = matchResultRepository.findByMatchId(matchId);
         if(user_num==1){
@@ -243,9 +248,9 @@ public class MatchService {
     public void matchResultCheck() throws Exception {
         List<String> failedList = matchResultRepository.findFailedMatchId();
         for(String f : failedList) {
+            matchResultRepository.findByMatchId(Integer.parseInt(f)).setState(1);
             Queue queue1 = queueRepository.findByQueueId(matchResultRepository.findByMatchId(Integer.parseInt(f)).getUser1()); queue1.setState(0);
             Queue queue2 = queueRepository.findByQueueId(matchResultRepository.findByMatchId(Integer.parseInt(f)).getUser2()); queue2.setState(0);
-            //send message to user1, user2 "matching failed."
             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
             MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
@@ -260,7 +265,6 @@ public class MatchService {
             MatchResult matchResult = matchResultRepository.findByMatchId(Integer.parseInt(s));
             Queue queue1 = queueRepository.findByQueueId(matchResult.getUser1());
             Queue queue2 = queueRepository.findByQueueId(matchResult.getUser2());
-            //send message to user1, user2 "matching success."
             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
             MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
@@ -285,13 +289,30 @@ public class MatchService {
                     .my_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
                     .delivery_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price()))
                     .build();
-            fcmService.sendMessageTo(token1, "매칭성공", "매칭이 성공하였습니다", data1
-            fcmService.sendMessageTo(token2, "매칭성공", "매칭이 성공하였습니다", data2);
+            fcmService.sendMessageTo(token1, "매칭 성공", "매칭이 성공하였습니다.", data1);
+            fcmService.sendMessageTo(token2, "매칭 성공", "매칭이 성공하였습니다.", data2);
             queueRepository.delete(queue1);
             queueRepository.delete(queue2);
             ordersRepository.deleteByUserId(queue1.getUserId());
             ordersRepository.deleteByUserId(queue2.getUserId());
         }
+    }
+
+    public void sendMessageAlarm(int chatMessageId) throws Exception {
+        ChatMessage chatMessage = chatMessageRepository.findByMessageId(chatMessageId);
+        String message = chatMessage.getMessage();
+        String roomId = chatMessage.getRoomId();
+        String senderId = chatMessage.getUserId();
+        String receiverId;
+        if(senderId.equals(chatRoomJoinRepository.findByRoomId(roomId).getUserId1())){
+            receiverId = chatRoomJoinRepository.findByRoomId(roomId).getUserId2();
+        }
+        else{
+            receiverId = chatRoomJoinRepository.findByRoomId(roomId).getUserId1();
+        }
+        String token = userRepository.findOneByUserId(receiverId).get().getToken();;
+        MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder().event("new chat message").build();
+        fcmService.sendMessageTo(token, "채팅 도착", message, data);
     }
 }
 
