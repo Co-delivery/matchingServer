@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import project.Codelivery.domain.Messages;
 import project.Codelivery.domain.User.User;
-import project.Codelivery.domain.User.UserRepository;
 import project.Codelivery.dto.User.*;
 import project.Codelivery.service.UserService;
 
@@ -60,17 +59,17 @@ public class UserController {
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
 
-    //@PostMapping("/user/order")
-    //public ResponseEntity<Messages> OrdersRequest(@RequestBody OrdersRequestDto requestDto) {
-    //    String user_id = requestDto.getUserId();
-    //    OrdersResponseDto responseDto = userService.findOrders(user_id);
-    //    Messages messages = Messages.builder()
-    //            .httpStatus(200)
-    //            .message("order check successful")
-    //            .data(responseDto)
-    //            .build();
-    //    HttpHeaders headers = new HttpHeaders();
-    //    headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-    //    return new ResponseEntity<>(messages, headers, HttpStatus.OK);
-    //}
+
+    @PostMapping("/user/address")
+    public ResponseEntity<Messages> changeAddress(@RequestBody ChangeAddressDto requestDto) {
+        userService.updateAddress(requestDto.getUserId(), requestDto.getAddress());
+        Messages messages = Messages.builder()
+                .httpStatus(200)
+                .message("change address successfully")
+                .data(requestDto)
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+        return new ResponseEntity<>(messages, headers, HttpStatus.OK);
+    }
 }

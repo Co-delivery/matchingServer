@@ -69,7 +69,7 @@ public class Exceptions {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
         return new ResponseEntity<>(messages, HttpStatus.SERVICE_UNAVAILABLE);
-        //service_unavaliable?
+
     }
 
 }

@@ -3,6 +3,7 @@ package project.Codelivery.service;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import project.Codelivery.domain.MatchResult.MatchResult;
 import project.Codelivery.domain.MatchResult.MatchResultRepository;
@@ -16,14 +17,10 @@ import project.Codelivery.domain.User.UserRepository;
 import project.Codelivery.dto.Match.MatchAcceptRequestDto;
 import project.Codelivery.dto.Match.MatchAcceptResponseDto;
 import project.Codelivery.dto.Match.MatchRequestDto;
-import project.Codelivery.dto.Match.MatchResponseDto;
 
 import javax.transaction.Transactional;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -41,7 +38,7 @@ public class MatchService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String save(MatchRequestDto requestDto) {
+    public String save(MatchRequestDto requestDto) throws IllegalArgumentException{
 
         // 위도경도 변환
         // 출처 : https://blog.naver.com/PostView.nhn?blogId=slayra&logNo=221383891512&from=search&redirect=Log&widgetTypeCall=true&directAccess=false
@@ -88,25 +85,28 @@ public class MatchService {
             System.out.println("latitude : " + tempObj.getDouble("y"));
             System.out.println("longitude : " + tempObj.getDouble("x"));
 
-            double latitude = tempObj.getDouble("y");
-            double longitude = tempObj.getDouble("x");
-            int location = 1;
-            if(37.281439 < latitude && latitude <= 37.284644) { location += 0; }
-            if(37.278235 < latitude && latitude <= 37.281439) { location += 3; }
-            if(37.275031 <= latitude && latitude <= 37.278235) { location += 6; }
-            if(127.037537 <= longitude && longitude <= 127.041653) { location += 0; }
-            if(127.041653 < longitude && longitude <= 127.045769) { location += 1; }
-            if(127.045769 < longitude && longitude <= 127.049885) { location += 2; }
-            if(longitude < 127.037537 || longitude > 127.049885 || latitude > 37.284644 || latitude < 37.275031) {
-                throw new IllegalArgumentException("Not a service location.");
-            }
-            requestDto.setLocation(location);
         }catch(Exception e) {
             e.printStackTrace();
         }
 
+        double latitude = requestDto.getLatitude();
+        double longitude = requestDto.getLongitude();
+        int location = 1;
+        if(37.281439 < latitude && latitude <= 37.284644) { location += 0; }
+        if(37.278235 < latitude && latitude <= 37.281439) { location += 3; }
+        if(37.275031 <= latitude && latitude <= 37.278235) { location += 6; }
+        if(127.037537 <= longitude && longitude <= 127.041653) { location += 0; }
+        if(127.041653 < longitude && longitude <= 127.045769) { location += 1; }
+        if(127.045769 < longitude && longitude <= 127.049885) { location += 2; }
+        if(longitude < 127.037537 || longitude > 127.049885 || latitude > 37.284644 || latitude < 37.275031) {
+            throw new IllegalArgumentException(" : Not a service area.");
+        }
+        requestDto.setLocation(location);
+
         Queue queue = Queue.builder()
                 .restaurant(requestDto.getRestaurant())
+                .latitude(requestDto.getLatitude())
+                .longitude(requestDto.getLongitude())
                 .location(requestDto.getLocation())
                 .userId(requestDto.getUserId())
                 .build();
@@ -130,12 +130,6 @@ public class MatchService {
         return Id;
     }
 
-    public MatchResponseDto findByUserId(String user_id) {
-        Queue entity = queueRepository.findByUserId(user_id).orElseThrow(
-                ()->new IllegalArgumentException("Error raise at usersRepository.findById, "+ user_id)
-         );
-        return new MatchResponseDto(entity);
-    }
 
     @Transactional
     public String delete (String user_id) {
@@ -153,6 +147,7 @@ public class MatchService {
     }
 
     @Transactional
+    @Scheduled(fixedDelay = 1000, initialDelay = 1000)
     public void matching() throws Exception {
 
             List<String> expiredList = queueRepository.findQueueIdByTimeStamp();
@@ -166,7 +161,7 @@ public class MatchService {
                                                                             .title("매칭 취소")
                                                                             .message("상대방을 찾는데 실패했어요.")
                                                                             .build();
-                //fcmService.sendMessageTo(token, data);
+                fcmService.sendMessageTo(token, data);
             }
 
 
@@ -185,8 +180,10 @@ public class MatchService {
                                     .build();
                             if(matchResultRepository.existsByMatchId(matchResult.getMatchId())){ break; }
                             int matchId = matchResultRepository.save(matchResult).getMatchId();
-                            Queue queue1 = queueRepository.findByQueueId(Integer.parseInt(queueId1)); queue1.setState(1);
-                            Queue queue2 = queueRepository.findByQueueId(Integer.parseInt(queueId2)); queue2.setState(1);
+                            Queue queue1 = queueRepository.findByQueueId(Integer.parseInt(queueId1));
+                            queue1.setState(1);
+                            Queue queue2 = queueRepository.findByQueueId(Integer.parseInt(queueId2));
+                            queue2.setState(1);
                             //send message to user1 & user2 "match accept?"
                             String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
                             String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
@@ -196,7 +193,10 @@ public class MatchService {
                                     .matchId(matchId)
                                     .user_num(1)
                                     .other_nickname(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname())
-                                    .other_address(userRepository.findOneByUserId(queue2.getUserId()).get().getAddress())
+                                    .my_latitude(queue1.getLatitude())
+                                    .my_longitude(queue1.getLongitude())
+                                    .other_latitude(queue2.getLatitude())
+                                    .other_longitude(queue2.getLongitude())
                                     .other_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                                     .my_price(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price())
                                     .delivery_price(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price())
@@ -207,13 +207,16 @@ public class MatchService {
                                     .matchId(matchId)
                                     .user_num(2)
                                     .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
-                                    .other_address(userRepository.findOneByUserId(queue1.getUserId()).get().getAddress())
+                                    .my_latitude(queue2.getLatitude())
+                                    .my_longitude(queue2.getLongitude())
+                                    .other_latitude(queue1.getLatitude())
+                                    .other_longitude(queue1.getLongitude())
                                     .other_price(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price())
                                     .my_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                                     .delivery_price(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price())
                                     .build();
-                            //fcmService.sendMessageTo(token1, data1);
-                            //fcmService.sendMessageTo(token2, data2);
+                            fcmService.sendMessageTo(token1, data1);
+                            fcmService.sendMessageTo(token2, data2);
                         }
                         queueIdList.clear();
                 }
@@ -239,6 +242,7 @@ public class MatchService {
 
 
     @Transactional
+    @Scheduled(fixedDelay = 1000, initialDelay = 1000)
     public void matchResultCheck() throws Exception {
         List<String> failedList = matchResultRepository.findFailedMatchId();
         for(String f : failedList) {
@@ -251,8 +255,8 @@ public class MatchService {
                     .title("매칭 실패")
                     .message("매칭이 성사되지 않았어요.")
                     .build();
-            //fcmService.sendMessageTo(token1, data);
-            //fcmService.sendMessageTo(token2, data);
+            fcmService.sendMessageTo(token1, data);
+            fcmService.sendMessageTo(token2, data);
         }
 
         List<String> successList = matchResultRepository.findSuccessMatchId();
@@ -267,7 +271,10 @@ public class MatchService {
                     .title("매칭 성공")
                     .message("매칭이 성사되었어요.")
                     .other_nickname(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname())
-                    .other_address(userRepository.findOneByUserId(queue2.getUserId()).get().getAddress())
+                    .my_latitude(queue1.getLatitude())
+                    .my_longitude(queue1.getLongitude())
+                    .other_latitude(queue2.getLatitude())
+                    .other_longitude(queue2.getLongitude())
                     .other_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                     .my_price(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price())
                     .delivery_price(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price())
@@ -276,13 +283,16 @@ public class MatchService {
                     .title("매칭 성공")
                     .message("매칭이 성사되었어요.")
                     .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
-                    .other_address(userRepository.findOneByUserId(queue1.getUserId()).get().getAddress())
+                    .my_latitude(queue2.getLatitude())
+                    .my_longitude(queue2.getLongitude())
+                    .other_latitude(queue1.getLatitude())
+                    .other_longitude(queue1.getLongitude())
                     .other_price(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price())
                     .my_price(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price())
                     .delivery_price(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price())
                     .build();
-            //fcmService.sendMessageTo(token1, data1);
-            //fcmService.sendMessageTo(token2, data2);
+            fcmService.sendMessageTo(token1, data1);
+            fcmService.sendMessageTo(token2, data2);
             queueRepository.delete(queue1);
             queueRepository.delete(queue2);
             ordersRepository.deleteByUserId(queue1.getUserId());

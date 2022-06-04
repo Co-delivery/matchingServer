@@ -6,10 +6,8 @@ import project.Codelivery.domain.OrderList.OrderList;
 import project.Codelivery.domain.OrderList.OrderListRepository;
 import project.Codelivery.domain.Orders.Orders;
 import project.Codelivery.domain.Orders.OrdersRepository;
-import project.Codelivery.domain.Queue.Queue;
 import project.Codelivery.domain.User.User;
 import project.Codelivery.domain.User.UserRepository;
-import project.Codelivery.dto.User.OrdersResponseDto;
 import project.Codelivery.dto.User.SignUpRequestDto;
 import project.Codelivery.dto.User.UserResponseDto;
 import javax.transaction.Transactional;
@@ -25,6 +23,12 @@ public class UserService {
 
     @Transactional
     public String save(SignUpRequestDto requestDto) {
+        if(userRepository.existsById(requestDto.getUserId())){
+            throw new IllegalArgumentException(" : userId already exists.");
+        }
+        if(userRepository.existsByNickname(requestDto.getNickname())){
+            throw new IllegalArgumentException(" : nickname already exists.");
+        }
         User user = User.builder()
                 .userId(requestDto.getUserId())
                 .password(requestDto.getPassword())
@@ -50,18 +54,11 @@ public class UserService {
         return findresult;
     }
 
-    public OrdersResponseDto findOrders(String user_id){
-        Orders orders = ordersRepository.findByUserId(user_id).get();
-        int price = orders.getPrice();
-        String restaurant = orders.getRestaurant();
-        String orderId = orders.getOrderId();
-        List<String> item = new ArrayList<>();
-
-        List<OrderList> orderListList = orderListRepository.findAllByOrderId(orderId);
-        for( OrderList o : orderListList){
-            item.add(o.getItem());
-        }
-        OrdersResponseDto responseDto = new OrdersResponseDto(user_id, restaurant, price, item);
-        return responseDto;
+    @Transactional
+    public User updateAddress(String user_id, String address){
+        User findresult = userRepository.findOneByUserId(user_id).get();
+        findresult.setAddress(address);
+        return findresult;
     }
+
 }

@@ -21,7 +21,7 @@ public class MatchController {
 
     @PostMapping("/match/request")
     public ResponseEntity<Messages> matchRequest(@RequestBody MatchRequestDto requestDto) {
-        matchService.save(requestDto);
+        String user_id = matchService.save(requestDto);
         Messages messages = Messages.builder()
                 .httpStatus(200)
                 .message("Matching registered successfully")
@@ -57,4 +57,6 @@ public class MatchController {
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
+
+
 }
