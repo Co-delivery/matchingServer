@@ -229,7 +229,7 @@ public class MatchService {
         int matchId = requestDto.getMatchId();
         int user_num = requestDto.getUser_num();
         int result = requestDto.getResult();
-        if(!matchResultRepository.existsById(String.valueOf(matchId))){
+        if(!matchResultRepository.existsByMatchId(matchId)){
             throw new IllegalArgumentException(" : invalid matchId.");
         }
 

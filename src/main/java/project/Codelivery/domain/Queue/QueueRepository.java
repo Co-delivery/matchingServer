@@ -18,7 +18,7 @@ public interface QueueRepository extends JpaRepository<Queue, String> {
     @Query(value = "SELECT location FROM (SELECT location, COUNT(location) AS count FROM Queue WHERE restaurant= :restaurant AND state=0 GROUP BY location)location WHERE location.count > 1", nativeQuery = true)
     List<String> findLocationByRestaurant(@Param("restaurant") String restaurant);
 
-    @Query(value = "SELECT queue_id FROM Queue WHERE restaurant=:restaurant AND location=:location AND state=0 ORDER BY timeStamp ASC", nativeQuery = true)
+    @Query(value = "SELECT queue_id FROM Queue WHERE restaurant=:restaurant AND location=:location AND state=0 ORDER BY queue_id DESC", nativeQuery = true)
     List<String> findQueueIdByRestaurantAndLocation(@Param("restaurant") String restaurant, @Param("location") String location);
 
     @Query(value = "SELECT queue_id FROM Queue WHERE timeStamp < DATE_ADD(now(), INTERVAL -5 MINUTE) AND state=0", nativeQuery = true)
