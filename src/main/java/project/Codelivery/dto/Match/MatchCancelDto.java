@@ -9,9 +9,4 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MatchCancelDto {
     private String userId;
-
-    public MatchCancelDto(MatchResponseDto matchResponseDto) {
-        this.userId = matchResponseDto.getUserId();
-    }
-
 }
