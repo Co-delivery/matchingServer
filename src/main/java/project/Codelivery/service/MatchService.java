@@ -242,6 +242,24 @@ public class MatchService {
         }
     }
 
+    @Transactional
+    public void matchPaymentResponse(MatchAcceptResponseDto requestDto){
+        int matchId = requestDto.getMatchId();
+        int user_num = requestDto.getUser_num();
+        int result = requestDto.getResult();
+        if(!matchResultRepository.existsByMatchId(matchId)){
+            throw new IllegalArgumentException(" : invalid matchId.");
+        }
+
+        MatchResult matchResult = matchResultRepository.findByMatchId(matchId);
+        if(user_num==1){
+            matchResult.setUser1_pay_result(result);
+        }
+        if(user_num==2){
+            matchResult.setUser2_pay_result(result);
+        }
+    }
+
 
     @Transactional
     @Scheduled(fixedDelay = 1000, initialDelay = 1000)
@@ -262,6 +280,28 @@ public class MatchService {
 
         List<String> successList = matchResultRepository.findSuccessMatchId();
         for(String s : successList) {
+            MatchResult matchResult = matchResultRepository.findByMatchId(Integer.parseInt(s));
+            matchResult.setState(2);
+            Queue queue1 = queueRepository.findByQueueId(matchResult.getUser1());
+            Queue queue2 = queueRepository.findByQueueId(matchResult.getUser2());
+            String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
+            String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
+            MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
+                    .event("payment required")
+                    .build();
+            MatchAcceptRequestDto.Data data2 = MatchAcceptRequestDto.Data.builder()
+                    .event("payment required")
+                    .build();
+            fcmService.sendMessageTo(token1, "결제 요청", "상대방이 수락하였습니다. 결제를 완료해주세요.", data1);
+            fcmService.sendMessageTo(token2, "결제 요청", "상대방이 수락하였습니다. 결제를 완료해주세요.", data2);
+            //queueRepository.delete(queue1);
+            //queueRepository.delete(queue2);
+            //ordersRepository.deleteByUserId(queue1.getUserId());
+            //ordersRepository.deleteByUserId(queue2.getUserId());
+        }
+
+        List<String> completeList = matchResultRepository.findCompleteMatchId();
+        for(String s : completeList) {
             MatchResult matchResult = matchResultRepository.findByMatchId(Integer.parseInt(s));
             Queue queue1 = queueRepository.findByQueueId(matchResult.getUser1());
             Queue queue2 = queueRepository.findByQueueId(matchResult.getUser2());

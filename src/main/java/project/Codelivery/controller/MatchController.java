@@ -58,5 +58,17 @@ public class MatchController {
         return new ResponseEntity<>(messages, headers, HttpStatus.OK);
     }
 
+    @PostMapping("/match/payment")
+    public ResponseEntity<Messages> matchPayment(@RequestBody MatchAcceptResponseDto requestDto) {
+        matchService.matchPaymentResponse(requestDto);
+        Messages messages = Messages.builder()
+                .httpStatus(200)
+                .message("payment complete")
+                .data(requestDto)
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+        return new ResponseEntity<>(messages, headers, HttpStatus.OK);
+    }
 
 }
