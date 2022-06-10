@@ -37,13 +37,7 @@ public class FCMService {
                 .build();
 
         Response response = client.newCall(request).execute();
-
-
-        System.out.println(response.code());
         System.out.println(response);
-        System.out.println(request);
-        System.out.println();
-
     }
 
     private String makeMessage(String token,String title, String body, MatchAcceptRequestDto.Data data) throws JsonProcessingException {

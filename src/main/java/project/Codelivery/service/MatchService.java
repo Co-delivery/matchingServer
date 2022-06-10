@@ -136,12 +136,48 @@ public class MatchService {
 
 
     @Transactional
-    public String delete (String user_id) {
+    public String delete (String user_id) throws Exception {
         Queue queue = queueRepository.findByUserId(user_id).orElseThrow(
                 ()->new IllegalArgumentException("Error raise at usersRepository.findById, "+user_id)
         );
+        List<MatchResult> resultList = matchResultRepository.findNeedAlarmMatchId();
+        for(MatchResult r : resultList){
+            if(queue.getQueueId() == r.getUser1()){
+                Queue other_queue = queueRepository.findByQueueId(r.getUser2());
+                String other_user_id = other_queue.getUserId();
+                String token = userRepository.findByUserId(other_user_id).getToken();
+                MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
+                        .event("matching cancel")
+                        .build();
+                fcmService.sendMessageTo(token, "매칭 실패", "상대방이 매칭을 취소했습니다.", data);
+                System.out.println("*********매칭취소 메시지**********\n***********token: " + token);
+                other_queue.setState(0);
+                queueRepository.delete(queue);
+                Orders orders = ordersRepository.findByUserId(user_id).orElseThrow(
+                        ()->new IllegalArgumentException("Error raise at usersRepository.findById, "+user_id)
+                );
+                ordersRepository.delete(orders);
+                return user_id;
+            }
+            if(queue.getQueueId() == r.getUser2()){
+                Queue other_queue = queueRepository.findByQueueId(r.getUser1());
+                String other_user_id = other_queue.getUserId();
+                String token = userRepository.findByUserId(other_user_id).getToken();
+                MatchAcceptRequestDto.Data data = MatchAcceptRequestDto.Data.builder()
+                        .event("matching cancel")
+                        .build();
+                fcmService.sendMessageTo(token, "매칭 실패", "상대방이 매칭을 취소했습니다.", data);
+                System.out.println("*********매칭취소 메시지**********\n***********token: " + token);
+                other_queue.setState(0);
+                queueRepository.delete(queue);
+                Orders orders = ordersRepository.findByUserId(user_id).orElseThrow(
+                        ()->new IllegalArgumentException("Error raise at usersRepository.findById, "+user_id)
+                );
+                ordersRepository.delete(orders);
+                return user_id;
+            }
+        }
         queueRepository.delete(queue);
-
         Orders orders = ordersRepository.findByUserId(user_id).orElseThrow(
                 ()->new IllegalArgumentException("Error raise at usersRepository.findById, "+user_id)
         );

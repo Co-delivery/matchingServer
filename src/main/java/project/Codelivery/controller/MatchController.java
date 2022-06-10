@@ -33,7 +33,7 @@ public class MatchController {
     }
 
     @DeleteMapping("/match/cancel")
-    public ResponseEntity<Messages> matchCancel(@RequestBody MatchCancelDto requestDto) {
+    public ResponseEntity<Messages> matchCancel(@RequestBody MatchCancelDto requestDto) throws Exception {
         String deleted_user_id = matchService.delete(requestDto.getUserId());
         Messages messages = Messages.builder()
                 .httpStatus(200)
