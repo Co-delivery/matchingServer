@@ -154,6 +154,7 @@ public class MatchService {
     @Scheduled(fixedDelay = 1000, initialDelay = 1000)
     public void matching() throws Exception {
 
+            //매칭 시간 초과
             List<String> expiredList = queueRepository.findQueueIdByTimeStamp();
             for(String e : expiredList){
                 String userId = queueRepository.findByQueueId(Integer.parseInt(e)).getUserId();
@@ -166,58 +167,64 @@ public class MatchService {
                 fcmService.sendMessageTo(token, "매칭시간 초과", "상대방을 찾을 수 없습니다.", data);
             }
 
-
+            //매칭
             List<String> restaurantList = queueRepository.findRestaurant();
             for (String r : restaurantList) {
                 List<String> locationList = queueRepository.findLocationByRestaurant(r);
                 for (String l : locationList) {
                     List<String> queueIdList = queueRepository.findQueueIdByRestaurantAndLocation(r, l);
                     int length= queueIdList.size();
-                        for(int i=0; i+1<length; i+=2){
-                            String queueId1 = queueIdList.get(i);
-                            String queueId2 = queueIdList.get(i+1);
-                            MatchResult matchResult = MatchResult.builder()
-                                    .user1(Integer.parseInt(queueId1))
-                                    .user2(Integer.parseInt(queueId2))
-                                    .build();
-                            if(matchResultRepository.existsByMatchId(matchResult.getMatchId())){ break; }
-                            int matchId = matchResultRepository.save(matchResult).getMatchId();
-                            Queue queue1 = queueRepository.findByQueueId(Integer.parseInt(queueId1));
-                            queue1.setState(1);
-                            Queue queue2 = queueRepository.findByQueueId(Integer.parseInt(queueId2));
-                            queue2.setState(1);
-                            String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
-                            String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
-                            MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
-                                    .event("find match")
-                                    .matchId(String.valueOf(matchId))
-                                    .user_num(String.valueOf(1))
-                                    .other_nickname(String.valueOf(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname()))
-                                    .my_latitude(String.valueOf(queue1.getLatitude()))
-                                    .my_longitude(String.valueOf(queue1.getLongitude()))
-                                    .other_latitude(String.valueOf(queue2.getLatitude()))
-                                    .other_longitude(String.valueOf(queue2.getLongitude()))
-                                    .other_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
-                                    .my_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price()))
-                                    .delivery_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price()))
-                                    .build();
-                            MatchAcceptRequestDto.Data data2 = MatchAcceptRequestDto.Data.builder()
-                                    .event("find match")
-                                    .matchId(String.valueOf(matchId))
-                                    .user_num(String.valueOf(2))
-                                    .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
-                                    .my_latitude(String.valueOf(queue2.getLatitude()))
-                                    .my_longitude(String.valueOf(queue2.getLongitude()))
-                                    .other_latitude(String.valueOf(queue1.getLatitude()))
-                                    .other_longitude(String.valueOf(queue1.getLongitude()))
-                                    .other_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price()))
-                                    .my_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
-                                    .delivery_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price()))
-                                    .build();
-                            fcmService.sendMessageTo(token1, "매칭 완료", "상대방을 확인해주세요.", data1);
-                            fcmService.sendMessageTo(token2, "매칭 완료", "상대방을 확인해주세요.", data2);
+                    for(int i=0; i<length-1; i++){
+                        String queueId1 = queueIdList.get(i);
+                        if(queueRepository.findByQueueId(Integer.parseInt(queueId1)).getState()==0) {
+                            for(int j=i+1;j<length;j++){
+                                String queueId2 = queueIdList.get(j);
+                                MatchResult matchResult = MatchResult.builder()
+                                        .user1(Integer.parseInt(queueId1))
+                                        .user2(Integer.parseInt(queueId2))
+                                        .build();
+                                if(queueRepository.findByQueueId(Integer.parseInt(queueId2)).getState()==0 && !matchResultRepository.existsByMatchId(matchResult.getMatchId())){
+                                    int matchId = matchResultRepository.save(matchResult).getMatchId();
+                                    Queue queue1 = queueRepository.findByQueueId(Integer.parseInt(queueId1));
+                                    queue1.setState(1);
+                                    Queue queue2 = queueRepository.findByQueueId(Integer.parseInt(queueId2));
+                                    queue2.setState(1);
+                                    String token1 = userRepository.findOneByUserId(queue1.getUserId()).get().getToken();
+                                    String token2 = userRepository.findOneByUserId(queue2.getUserId()).get().getToken();
+                                    MatchAcceptRequestDto.Data data1 = MatchAcceptRequestDto.Data.builder()
+                                            .event("find match")
+                                            .matchId(String.valueOf(matchId))
+                                            .user_num(String.valueOf(1))
+                                            .other_nickname(String.valueOf(userRepository.findOneByUserId(queue2.getUserId()).get().getNickname()))
+                                            .my_latitude(String.valueOf(queue1.getLatitude()))
+                                            .my_longitude(String.valueOf(queue1.getLongitude()))
+                                            .other_latitude(String.valueOf(queue2.getLatitude()))
+                                            .other_longitude(String.valueOf(queue2.getLongitude()))
+                                            .other_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
+                                            .my_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price()))
+                                            .delivery_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getDelivery_price()))
+                                            .build();
+                                    MatchAcceptRequestDto.Data data2 = MatchAcceptRequestDto.Data.builder()
+                                            .event("find match")
+                                            .matchId(String.valueOf(matchId))
+                                            .user_num(String.valueOf(2))
+                                            .other_nickname(userRepository.findOneByUserId(queue1.getUserId()).get().getNickname())
+                                            .my_latitude(String.valueOf(queue2.getLatitude()))
+                                            .my_longitude(String.valueOf(queue2.getLongitude()))
+                                            .other_latitude(String.valueOf(queue1.getLatitude()))
+                                            .other_longitude(String.valueOf(queue1.getLongitude()))
+                                            .other_price(String.valueOf(ordersRepository.findByUserId(queue1.getUserId()).get().getMenu_price()))
+                                            .my_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getMenu_price()))
+                                            .delivery_price(String.valueOf(ordersRepository.findByUserId(queue2.getUserId()).get().getDelivery_price()))
+                                            .build();
+                                    fcmService.sendMessageTo(token1, "매칭 완료", "상대방을 확인해주세요.", data1);
+                                    fcmService.sendMessageTo(token2, "매칭 완료", "상대방을 확인해주세요.", data2);
+                                    break;
+                                }
+                            }
                         }
-                        queueIdList.clear();
+                    }
+                    queueIdList.clear();
                 }
                 locationList.clear();
             }
@@ -264,6 +271,8 @@ public class MatchService {
     @Transactional
     @Scheduled(fixedDelay = 1000, initialDelay = 1000)
     public void matchResultCheck() throws Exception {
+
+        //실패 CASE
         List<String> failedList = matchResultRepository.findFailedMatchId();
         for(String f : failedList) {
             matchResultRepository.findByMatchId(Integer.parseInt(f)).setState(1);
@@ -278,6 +287,7 @@ public class MatchService {
             fcmService.sendMessageTo(token2, "매칭 실패", "매칭이 성사되지 않았어요.", data);
         }
 
+        //수락 성공 CASE
         List<String> successList = matchResultRepository.findSuccessMatchId();
         for(String s : successList) {
             MatchResult matchResult = matchResultRepository.findByMatchId(Integer.parseInt(s));
@@ -294,12 +304,9 @@ public class MatchService {
                     .build();
             fcmService.sendMessageTo(token1, "결제 요청", "상대방이 수락하였습니다. 결제를 완료해주세요.", data1);
             fcmService.sendMessageTo(token2, "결제 요청", "상대방이 수락하였습니다. 결제를 완료해주세요.", data2);
-            //queueRepository.delete(queue1);
-            //queueRepository.delete(queue2);
-            //ordersRepository.deleteByUserId(queue1.getUserId());
-            //ordersRepository.deleteByUserId(queue2.getUserId());
         }
 
+        //결제 성공 CASE
         List<String> completeList = matchResultRepository.findCompleteMatchId();
         for(String s : completeList) {
             MatchResult matchResult = matchResultRepository.findByMatchId(Integer.parseInt(s));
